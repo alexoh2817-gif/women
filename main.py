@@ -54,7 +54,7 @@ FILES = {"1부": "1부_여자.xlsx", "2부": "2부_여자.xlsx"}
 # ──────────────────────────────
 def safe_read_excel(path):
     if not os.path.exists(path):
-        return pd.DataFrame(columns=["학번","이름","출석여부","입장시간"])
+        return pd.DataFrame(columns=["학번","이름","입장 여부","입장 시간"])
     df = pd.read_excel(path, engine="openpyxl")
 
     id_col = next((c for c in df.columns if ("학번" in str(c)) or (str(c).lower() in ["id","student_id"])), None)
@@ -66,8 +66,8 @@ def safe_read_excel(path):
     out.columns = ["학번","이름"]
     out["학번"] = out["학번"].astype(str).str.strip()
     out["이름"] = out["이름"].astype(str).str.strip()
-    out["출석여부"] = df["출석여부"].fillna(0).astype(int) if "출석여부" in df.columns else 0
-    out["입장시간"] = df["입장시간"].fillna("").astype(str) if "입장시간" in df.columns else ""
+    out["입장 여부"] = df["입장 여부"].fillna(0).astype(int) if "입장 여부" in df.columns else 0
+    out["입장 시간"] = df["입장 시간"].fillna("").astype(str) if "입장 시간" in df.columns else ""
     return out
 
 def safe_write_excel(df, path):
@@ -83,18 +83,18 @@ def safe_write_excel(df, path):
             except: pass
 
 def reset_df(df):
-    df["출석여부"] = 0
-    df["입장시간"] = ""
+    df["입장 여부"] = 0
+    df["입장 시간"] = ""
     return df
 
 # 칩 렌더링
 def style_attendance(df):
     disp = df.copy()
-    disp["출석표시"] = disp["출석여부"].map(
+    disp["입장 표시"] = disp["입장 여부"].map(
         lambda x: '<span class="chip chip-green">출석</span>' if int(x)==1
                   else '<span class="chip chip-gray">미출석</span>'
     )
-    return disp[["학번","이름","출석표시","입장시간"]]
+    return disp[["학번","이름","입장 표시","입장 시간"]]
 
 # ──────────────────────────────
 # Sidebar
@@ -115,8 +115,8 @@ st.markdown(f"""
 <div class="header">
   <div class="header-emoji">🧸</div>
   <div>
-    <h2>출석체크 시스템 <small style="opacity:.7">({part})</small></h2>
-    <div style="opacity:.7">학번 또는 이름 입력 → 즉시 출석</div>
+    <h2>입장 체크 시스템 <small style="opacity:.7">({part})</small></h2>
+    <div style="opacity:.7">학번 또는 이름 입력 → 즉시 입장</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -134,21 +134,21 @@ except Exception as e:
 # 상단 빠른 초기화(현재 부만)
 col_reset, col_sp = st.columns([1, 5])
 with col_reset:
-    if st.button("🧹 오늘 종료: 현재 부 출석 초기화"):
+    if st.button("🧹 오늘 종료: 현재 부 입장 초기화"):
         df = reset_df(df)
         safe_write_excel(df, FILE_PATH)
-        st.success(f"{part} 출석이 초기화되었습니다.")
+        st.success(f"{part} 입장이 초기화되었습니다.")
 
 # ──────────────────────────────
 # 메트릭 카드
 # ──────────────────────────────
 total = len(df)
-attended = int((df["출석여부"] == 1).sum())
+attended = int((df["입장 여부"] == 1).sum())
 absent = total - attended
 c1, c2, c3 = st.columns(3)
 with c1: st.markdown(f'<div class="metric-card"><div>총원</div><h3>{total}</h3></div>', unsafe_allow_html=True)
-with c2: st.markdown(f'<div class="metric-card"><div>출석</div><h3>{attended}</h3></div>', unsafe_allow_html=True)
-with c3: st.markdown(f'<div class="metric-card"><div>미출석</div><h3>{absent}</h3></div>', unsafe_allow_html=True)
+with c2: st.markdown(f'<div class="metric-card"><div>입장장</div><h3>{attended}</h3></div>', unsafe_allow_html=True)
+with c3: st.markdown(f'<div class="metric-card"><div>미입장</div><h3>{absent}</h3></div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -160,7 +160,7 @@ with st.form("checkin_form", clear_on_submit=True):
     st.markdown('<div class="big-input">', unsafe_allow_html=True)
     user_input = st.text_input("학번 또는 이름 입력", value="", help="학번 또는 이름 입력 후 Enter")
     st.markdown('</div>', unsafe_allow_html=True)
-    submitted = st.form_submit_button("출석하기")
+    submitted = st.form_submit_button("입장하기")
 
     if submitted:
         keyword = str(user_input).strip()
@@ -178,14 +178,14 @@ with st.form("checkin_form", clear_on_submit=True):
             else:
                 idx = match.index[0]
                 name = df.loc[idx, "이름"]
-                if int(df.loc[idx, "출석여부"]) == 1:
+                if int(df.loc[idx, "입장 여부"]) == 1:
                     st.warning(f"⚠️ 이미 입장: {name}")
                 else:
-                    df.loc[idx, "출석여부"] = 1
-                    df.loc[idx, "입장시간"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    df.loc[idx, "입장 여부"] = 1
+                    df.loc[idx, "입장 시간"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     try:
                         safe_write_excel(df, FILE_PATH)
-                        st.success(f"✅ 출석 완료: {name}")
+                        st.success(f"✅ 입장 완료: {name}")
                     except Exception as e:
                         st.error(f"저장 실패: {e}")
 
@@ -207,8 +207,8 @@ st.write(styled.to_html(escape=False, index=False), unsafe_allow_html=True)
 # 다운로드(백업)
 st.download_button(
     "📥 현재 현황 CSV 다운로드",
-    data=df[["학번","이름","출석여부","입장시간"]].to_csv(index=False).encode("utf-8-sig"),
-    file_name=f"{part}_출석현황.csv",
+    data=df[["학번","이름","입장 여부","입장 시간"]].to_csv(index=False).encode("utf-8-sig"),
+    file_name=f"{part}_입장현황.csv",
     type="secondary"
 )
 
@@ -224,4 +224,7 @@ with st.expander("🛠️ 관리자"):
             st.success("초기화 완료")
         else:
             st.error("비밀번호 불일치")
+
+
+
 
