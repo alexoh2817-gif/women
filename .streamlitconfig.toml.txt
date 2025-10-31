@@ -1,0 +1,7 @@
+# .streamlit/config.toml
+[theme]
+base="light"
+primaryColor="#F472B6"            # 버튼 핑크
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#FAFAFF" # 은은한 보조 배경
+textColor="#111827"
